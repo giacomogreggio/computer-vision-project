@@ -1,14 +1,3 @@
-import numpy as np
-import tensorflow as tf
-from tensorflow.keras.applications.vgg16 import VGG16
-from tensorflow.keras.layers import Conv2D, Conv2DTranspose, MaxPooling2D, Input, MaxPool2D, ZeroPadding2D, Cropping2D, Softmax
-from tensorflow.keras.regularizers import l2
-from tensorflow.keras import Model
-from tensorflow.keras.optimizers import SGD
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.losses import SparseCategoricalCrossentropy, CategoricalCrossentropy
-
-
 def create_vgg_fcn_32(n_classes, image_shape, crop_value,l2_value=5**-4):
     l2_value = 5 ** -4
     
