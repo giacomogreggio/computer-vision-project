@@ -53,14 +53,37 @@ Diego Mazzalovo\\
 %%%%%%%%% BODY TEXT
 \section{Introduction}
 
-Semantic segmentation, or image segmentation, is the task of clustering parts of an image together which belong to the same object class. It is a form of pixel-level prediction because each pixel in an image is classified according to a category.\\
-In past years this work has been done mainly with Convolutional Neural Networks, which classify each pixel
+When we talk about Image data there are many tasks that can come to mind. The easiest one that someone can implement is image classification: giving as input an image to the suitable classifier and this one returns the label related to the object that it represents. \\
+This approach to image classification has some serious limits, for example if your image contains various objects belonging to several different classes, it's basically impossible to find the correct label since multiple labels will be associated to that image. Moreover in many applications knowing the content of an image is not enough, and it comes necessary to find the locations of the objects depicted in it. \\
+The next step to naive image classification is object detection. In object detection, we not only need to identify all the objects of interest in the image, but also their positions. The positions are generally represented by a rectangular bounding box. \\
+This approach can be improved because the boxes don't identify perfectly the object boundaries. In many fields like autonomous driving or medical applications knowing the exact boundaries is essential.
+So, the next step that can be made to improve object detection is image segmentation.
+Image segmentation, is the task of clustering parts of an image together which belong to the same object class. The predictions are made over each pixel which is classified according to a category which can be background or the class it is associated to. \\
+There are many more task related to image data, but we will focus only on image segmentation. \\ \\
+Image classification task are often handled by convolutional networks that have fully connected dense layers at the end of the network. This approach may be fine for many different applications but can pose some serious limitations for image segmentations. The main one is that dense layers unlike convolutional ones can't handle image of various size. To solve this problems many different approaches have been proposed like resizing the images or patch sampling, that we discuss better in the next section. \\ \\
+All of these methods though can handle only fixed input size or require complicated preprocessing and machinery in order to work. In fully convolutional networks (FCNs) dense layers are substituted by convolutional ones, to make them capable to manage images of any size and produce an output of the same size of the image. TO DO
+
 
 \section{Related Work}
 
-	PATCHWISE SAMPLING AND UNET
+PATCHWISE SAMPLING AND UNET
 
 \section{Dataset}
+
+Since our goal is to reproduced one or more experiments made by the reference paper\cite{projectPaper}, we chose to use the PASCAL VOC 2011\cite{pascal-voc-2011} dataset in which they tested all their architectures.
+The dataset refers to a visual object challenge made in 2011 and which has been updated in the next years. \\
+The dataset contains more than 10000 images with annotations related to different tasks like classification, object detection and image segmentation.
+For our task it contains 2223 images, which are 1112 for training set and 1111 for validation set.
+The segmentation data is composed by 21 different classes, including background, and a void label which is used to identify the pixels that are ambiguous or difficult to classify, these pixel should be ignored when calculating the loss value.
+As validation data we used a subset of 736 images like was done in \cite{projectPaper}, according to "Semantic Boundaries Dataset and Benchmark"\cite{BharathICCV2011}. \\ \\
+Before testing on PASCAL VOC 2011 dataset, tested also in some simpler dataset.
+One of them is "Carvana-image-masking-challenge"\cite{carvana} dataset. This dataset was published by Carvana for a challenge on Kaggle. It contains over 5000 images of different kind of cars seen from various angles. Segmentation data contains only 2 classes: the background and the cars' one. \\
+The training on Carvana's dataset took less time and epochs to converge to nice results. TO DO
+This was mainly due to the fact that all images contained in the dataset shared the same background. More limited amount of classes that the network needed to predict, also helped a lot to speed up the convergence. TO DO \\ \\
+All the segmentation datasets contain two main components: the image data and the mask data. Image data do not require more explanations. Mask data are the classification targets, they have the same shape of the images related to them and each pixel in the mask represent the class it belongs to.
+Basically all the datasets needed a minimum amount of preprocessing.
+Since all the mask are in RGB format and the neural network returns a probability distribution over each class, we needed to convert the three channels to a single channel representing in each entry the corresponding class. Initially we converted each image to a one-hot-encoding where the number of channels was equal to the number of classes. After some experiments we found out that this wasn't necessary, so we dedided to use a lighter version with only one channel. \\
+In addition to that, we also normalized the images, in order to obtain only values between 0 and 1. This is important to avoid gradient explosion issues, but it isn't a mandatory step to train the network.
 
 \section{Method}
 
