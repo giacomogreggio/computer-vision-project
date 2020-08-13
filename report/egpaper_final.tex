@@ -84,8 +84,35 @@ All the segmentation datasets contain two main components: the image data and th
 Basically all the datasets needed a minimum amount of preprocessing.
 Since all the mask are in RGB format and the neural network returns a probability distribution over each class, we needed to convert the three channels to a single channel representing in each entry the corresponding class. Initially we converted each image to a one-hot-encoding where the number of channels was equal to the number of classes. After some experiments we found out that this wasn't necessary, so we dedided to use a lighter version with only one channel. \\
 In addition to that, we also normalized the images, in order to obtain only values between 0 and 1. This is important to avoid gradient explosion issues, but it isn't a mandatory step to train the network.
+TO DO DATAGENERATOR
 
 \section{Method}
+
+The authors of \cite{projectPaper} wrote all of their implementations using Caffe\footnote{\href{https://caffe.berkeleyvision.org/}{Link to Caffe}}, a public library with many tools suitable for computer vision. On the other hand we used for all our implementations Keras\footnote{\href{https://keras.io/}{Link to Keras}} library.
+One of the first thing we did was reproducing the architectures that were illustrated in the paper. The most basic architecture between the ones that we reproduced is the FCN32. This architecture is made starting from the VGG16 architecture \cite{weights}.
+\begin{figure}[t]
+	\includegraphics[width=8cm]{image/vgg16}
+	\label{vgg}
+	\centering
+	\caption{VGG16 architecure}
+\end{figure}
+Like we can see in \ref{vgg} the VGG architecture is made by five convolutional blocks, each one contains two or three convolutional layers followed by a MaxPooling layer. After those convolutional blocks there are three fully connected dense layers, in order to make predictions. \\
+We started by replicating the whole vgg network with basic keras layers. Since we needed the network to handle inputs of various size we removed the last three fully connected dense layers of the VGG. Then, we downloaded the pretrained weights of the remaining layers of the network available in the public library of keras.
+Like the authors of \cite{projectPaper} did, we appended at the end of the networks three convolutional layers. The first one has a number of filters of 4096 and a kernel size of (7x7). The second one also has a number of filters of 4096, but a kernel size of (1x1). The last one has a number of filters equal to the number of classes we want to predict and a kernel size of(1x1).
+These last three layers act in substitution of the dense layers that we removed from the original VGG. They are the ones who make predictions, but since they are convolutional they can still handle inputs of any size.
+Moreover between each one of these last three convolutional layers we also put a dropout layer with p=0.5.\\
+As of now the network outputs a tensor which has a size significantly lower than the one of the input image. Since we want the output to have the same size of the input, we needed to add a deconvolutional layer of size (64x64) with stride 32. This layer increases the size of the input it receives by applying a deconvolution operation. In keras this layer takes the name of Conv2DTranspose\footnote{\href{https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2DTranspose}{link to Conv2DTranspose}}. However, this operation made the output of the network too big by a few extra pixels.\\
+\begin{figure*}
+	\includegraphics[width=\textwidth]{image/fcn}
+	\label{fcn}
+	\centering
+	\caption{FCN architecure}
+\end{figure*}
+To solve the problem the authors of the paper added a Cropping layer which takes in input the outputs of two layers and takes the biggest one to the dimension of the smaller one by removing the extra pixels from the borders. Keras does not implement dynamic cropping, so we needed to implement a custom layer to perform the dynamic crop operation. At the end of the network there is a softmax layer in order to produce a valid probability distribution over each class.
+Now the FCN32 architecure is complete. \\
+This architecture is fine, but can be improved. The authors of the paper made this improvement by implementing skip architectures. This enables the network to pr
+
+
 
 \section{Experiments}
 
