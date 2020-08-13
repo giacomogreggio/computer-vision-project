@@ -53,42 +53,53 @@ Diego Mazzalovo\\
 %%%%%%%%% BODY TEXT
 \section{Introduction}
 
-When we talk about Image data there are many tasks that can come to mind. The easiest one that someone can implement is image classification: giving as input an image to the suitable classifier and this one returns the label related to the object that it represents. \\
+When we talk about Image data there are many tasks that can come to mind. The easiest one that someone can implement is image classification: you give as input an image to the suitable classifier and this one returns the label related to the object that it represents. \\
 This approach to image classification has some serious limits, for example if your image contains various objects belonging to several different classes, it's basically impossible to find the correct label since multiple labels will be associated to that image. Moreover in many applications knowing the content of an image is not enough, and it comes necessary to find the locations of the objects depicted in it. \\
 The next step to naive image classification is object detection. In object detection, we not only need to identify all the objects of interest in the image, but also their positions. The positions are generally represented by a rectangular bounding box. \\
 This approach can be improved because the boxes don't identify perfectly the object boundaries. In many fields like autonomous driving or medical applications knowing the exact boundaries is essential.
 So, the next step that can be made to improve object detection is image segmentation.
 Image segmentation, is the task of clustering parts of an image together which belong to the same object class. The predictions are made over each pixel which is classified according to a category which can be background or the class it is associated to. \\
-There are many more task related to image data, but we will focus only on image segmentation. \\ \\
-Image classification task are often handled by convolutional networks that have fully connected dense layers at the end of the network. This approach may be fine for many different applications but can pose some serious limitations for image segmentations. The main one is that dense layers unlike convolutional ones can't handle image of various size. To solve this problems many different approaches have been proposed like resizing the images or patch sampling, that we discuss better in the next section. \\ \\
+There are many more tasks related to image data, but we will focus only on image segmentation. \\ \\
+Image classification task are often handled by convolutional networks that have fully connected dense layers at the end of the network. This approach may be fine for many different applications but can pose some serious limitations for image segmentation. The main one is that dense layers unlike convolutional ones can't handle images of various size. To solve this problems many different approaches have been proposed like resizing the images or patch sampling, that we discuss better in the next section. \\ \\
 All of these methods though can handle only fixed input size or require complicated preprocessing and machinery in order to work. In fully convolutional networks (FCNs) dense layers are substituted by convolutional ones, to make them capable to manage images of any size and produce an output of the same size of the image. TO DO
 
 
 \section{Related Work}
 
-PATCHWISE SAMPLING AND UNET
+There are many different approaches to solve semantic segmentation problems. The most common approach inolve ConvNets with dense predictions. Since they can't handle input of different sizes, many different processing techniques had to be taken in order to make segmentation work. For example, by sampling an area of fixed dimension around each pixel and  using that to classifying the pixel. Some previous works have been done by Ning et al.\cite{1495508}, Cirean et al.\cite{article}, where they applied image segmentation respectively to the evolution of embryos and to neuroanatomy. \\
+This method computes a prediction pixel by pixel, so both training and predicting, are computationally not efficient. \\ \\
+As time passed better approaches have been developed like FCNs that we will discuss in the other chapters, but also many other different techniques.\\
+For example one of the most popular way (from what we have seen) to solve semantic segmentation is through the use of encoder-decoder architectures (see fig. \ref{ednet}).
+\begin{figure}[t]
+	\includegraphics[width=8cm]{image/ednet}
+	\label{ednet}
+	\centering
+	\caption{Encoder-decoder architecure}
+\end{figure}
+The encoder-decoder architecures are made by two parts: an encoder using convolutional layers (usually taken by VGG16) and deconvolutional network which takes in input the feature vector produced by the encoder and generates a map of pixelwise class probabilities. Some works have been made by Li et al.\cite{8379359} and Weng et al.\cite{8681706}.\\
+Many different approaches based on recursive and recurrent neaural networks have also been proposed, but we didn't dive to much on that. For a more detailed description of the state of the art check the survey made by Minaee et al.\cite{unknown}. 
+
 
 \section{Dataset}
 
-Since our goal is to reproduced one or more experiments made by the reference paper\cite{projectPaper}, we chose to use the PASCAL VOC 2011\cite{pascal-voc-2011} dataset in which they tested all their architectures.
+Since our goal is to reproduce one or more experiments made by the reference paper\cite{projectPaper}, we chose to use the PASCAL VOC 2011\cite{pascal-voc-2011} dataset in which the authors tested all their architectures.
 The dataset refers to a visual object challenge made in 2011 and which has been updated in the next years. \\
 The dataset contains more than 10000 images with annotations related to different tasks like classification, object detection and image segmentation.
 For our task it contains 2223 images, which are 1112 for training set and 1111 for validation set.
 The segmentation data is composed by 21 different classes, including background, and a void label which is used to identify the pixels that are ambiguous or difficult to classify, these pixel should be ignored when calculating the loss value.
-As validation data we used a subset of 736 images like was done in \cite{projectPaper}, according to "Semantic Boundaries Dataset and Benchmark"\cite{BharathICCV2011}. \\ \\
-Before testing on PASCAL VOC 2011 dataset, tested also in some simpler dataset.
-One of them is "Carvana-image-masking-challenge"\cite{carvana} dataset. This dataset was published by Carvana for a challenge on Kaggle. It contains over 5000 images of different kind of cars seen from various angles. Segmentation data contains only 2 classes: the background and the cars' one. \\
+As validation data we used a subset of 736 images like it was done in \cite{projectPaper}, according to "Semantic Boundaries Dataset and Benchmark"\cite{BharathICCV2011}. \\ \\
+Before testing on PASCAL VOC 2011 dataset, we tested also in a simpler dataset: "Carvana-image-masking-challenge"\cite{carvana} dataset. This dataset was published by Carvana for a challenge on Kaggle. It contains over 5000 images of different kind of cars seen from various angles. Segmentation data contains only 2 classes: the background and the cars' one. \\
 The training on Carvana's dataset took less time and epochs to converge to nice results. TO DO
-This was mainly due to the fact that all images contained in the dataset shared the same background. More limited amount of classes that the network needed to predict, also helped a lot to speed up the convergence. TO DO \\ \\
+This was mainly due to the fact that all images contained in the dataset shared the same background. Also the more limited amount of classes that the network needed to predict, helped a lot to speed up the convergence. TO DO \\ \\
 All the segmentation datasets contain two main components: the image data and the mask data. Image data do not require more explanations. Mask data are the classification targets, they have the same shape of the images related to them and each pixel in the mask represent the class it belongs to.
 Basically all the datasets needed a minimum amount of preprocessing.
-Since all the mask are in RGB format and the neural network returns a probability distribution over each class, we needed to convert the three channels to a single channel representing in each entry the corresponding class. Initially we converted each image to a one-hot-encoding where the number of channels was equal to the number of classes. After some experiments we found out that this wasn't necessary, so we dedided to use a lighter version with only one channel. \\
+Since all the mask are in RGB format and the neural network returns a probability distribution over each class, we needed to convert the three channels to a single channel representing in each entry the corresponding class. Initially we converted each image to a one-hot-encoding where the number of channels was equal to the number of classes. After some experiments we found out that this wasn't necessary, so we decided to use a lighter version with only one channel. \\
 In addition to that, we also normalized the images, in order to obtain only values between 0 and 1. This is important to avoid gradient explosion issues, but it isn't a mandatory step to train the network.
-TO DO DATAGENERATOR
+Since we couldn't load the entire dataset in the memories of our PCs, we were forced to build a data generator. A data generator is an object which can be called by keras and returns only the data required to execute a single batch step. This allows us to keep in memory much less data.
 
 \section{Method}
 
-The authors of \cite{projectPaper} wrote all of their implementations using Caffe\footnote{\href{https://caffe.berkeleyvision.org/}{Link to Caffe}}, a public library with many tools suitable for computer vision. On the other hand we used for all our implementations Keras\footnote{\href{https://keras.io/}{Link to Keras}} library.
+The authors of \cite{projectPaper} wrote all of their implementations using Caffe \footnote{\href{https://caffe.berkeleyvision.org/}{Link to Caffe}}, a public library with many tools suitable for computer vision. On the other hand we used for all our implementations Keras \footnote{\href{https://keras.io/}{Link to Keras}} library.
 One of the first thing we did was reproducing the architectures that were illustrated in the paper. The most basic architecture between the ones that we reproduced is the FCN32. This architecture is made starting from the VGG16 architecture \cite{weights}.
 \begin{figure}[t]
 	\includegraphics[width=8cm]{image/vgg16}
@@ -101,7 +112,7 @@ We started by replicating the whole vgg network with basic keras layers. Since w
 Like the authors of \cite{projectPaper} did, we appended at the end of the networks three convolutional layers. The first one has a number of filters of 4096 and a kernel size of (7x7). The second one also has a number of filters of 4096, but a kernel size of (1x1). The last one has a number of filters equal to the number of classes we want to predict and a kernel size of(1x1).
 These last three layers act in substitution of the dense layers that we removed from the original VGG. They are the ones who make predictions, but since they are convolutional they can still handle inputs of any size.
 Moreover between each one of these last three convolutional layers we also put a dropout layer with p=0.5.\\
-As of now the network outputs a tensor which has a size significantly lower than the one of the input image. Since we want the output to have the same size of the input, we needed to add a deconvolutional layer of size (64x64) with stride 32. This layer increases the size of the input it receives by applying a deconvolution operation. In keras this layer takes the name of Conv2DTranspose\footnote{\href{https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2DTranspose}{link to Conv2DTranspose}}. However, this operation made the output of the network too big by a few extra pixels.\\
+As of now the network outputs a tensor which has a size significantly lower than the one of the input image. Since we want the output to have the same size of the input, we needed to add a deconvolutional layer of size (64x64) with stride 32. This layer increases the size of the input it receives by applying a deconvolution operation. In keras this layer takes the name of Conv2DTranspose \footnote{\href{https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2DTranspose}{Link to Conv2DTranspose}}. However, this operation made the output of the network too big by a few extra pixels.\\
 \begin{figure*}
 	\includegraphics[width=\textwidth]{image/fcn}
 	\label{fcn}
@@ -109,9 +120,13 @@ As of now the network outputs a tensor which has a size significantly lower than
 	\caption{FCN architecure}
 \end{figure*}
 To solve the problem the authors of the paper added a Cropping layer which takes in input the outputs of two layers and takes the biggest one to the dimension of the smaller one by removing the extra pixels from the borders. Keras does not implement dynamic cropping, so we needed to implement a custom layer to perform the dynamic crop operation. At the end of the network there is a softmax layer in order to produce a valid probability distribution over each class.
-Now the FCN32 architecure is complete. \\
-This architecture is fine, but can be improved. The authors of the paper made this improvement by implementing skip architectures. This enables the network to pr
-
+Now FCN32 architecure is complete. \\
+This architecture is fine, but it can be improved. A way to improve performances is implementing skip architectures. The receptive fields of the deeper layers are bigger and see more pixels if compared with the shallower ones. This causes FCN32 to produce coarse outputs. Combining the outputs of the deeper layers with the outputs of the shallower ones, allows the model to make more local predictions while respecting the gloabl structure. \\
+FCN16 is built on this idea. We take the output of the fourth covolutional block of FCN32 and apply a convolution to it with kernel size of (1x1) and number of filters equal to the number of classes that we want to predict. Then we sum it with the last convolutional layer of FCN32, the one immediatly before the deconvolutional layer. We call this operation fusion layer as the original paper. The dimension of the obtained convolutional layer is bigger than the one of the last convolutional layer, due to an higher amount of pooling operations applied to this last layer. 
+To make the dimensions of their outputs match we apply to the smaller one a deconvolution with number of filters equal to the number of classes, kernel size of (1x1) and stride equal to 2. We crop the extra pixels with our custom cropping layer like we did at the end of FCN32. Then to make the dimensions of the output match the input dimensions we applied another time a deconvolution followed by a crop. The architecture of FCN16 is complete. \\
+FCN16 improves a lot the results of FCN32, but it can still be improved. To do that, we follow the same process we used to build FCN16 with some small differences and obtain FCN8.
+We take the output of the third convolutional block of VGG16 and apply a convolution to it with the same parameters as the previous architecture and fuse it with the fusion layer of FCN16. As we have done with FCN16 we applied a deconvolution with kernel size of (4x4) and stride equal to 2 and number of classes filters. We need to crop the bigger output before fusing them together. As last layer we make the convolution of the fusion layer with number of classes filters and kernel size of (16x16) and stride equal to 8 which we have to crop to obtain the same dimensions as the input image. The last layer is a softmax layer to produce a valid probability distribution over each class. \\
+On all convolutional layers we applied padding in order to obtain the same dimension on the input images. Moreover, all convolutional layers had ReLU as activation function, while the others had a linear activation function.  
 
 
 \section{Experiments}
